@@ -15,22 +15,22 @@ public class NifiClient {
     @Autowired
     private RestTemplate restTemplate;
 
-    private static final String CREATE_PROCESSOR_URL =
+    private static final String PROCESSOR_URL =
         "http://localhost:9090/nifi-api/process-groups/{process-group}/processors";
 
-    private static final String CREATE_CONNECTION_URL =
+    private static final String CONNECTION_URL =
         "http://localhost:9090/nifi-api/process-groups/{process-group}/connections";
 
-    private static final String CREATE_CONTROLLER_SERVICE_URL =
+    private static final String CONTROLLER_SERVICE_URL =
         "http://localhost:9090/nifi-api/process-groups/{process-group}/controller-services";
 
-    private static final String CREATE_PROCESS_GROUP_URL = 
+    private static final String PROCESS_GROUP_URL = 
         "http://localhost:9090/nifi-api/process-groups/{process-group}/process-groups";
 
-    private static final String CREATE_INPUT_PORT_URL = 
+    private static final String INPUT_PORT_URL = 
         "http://localhost:9090/nifi-api/process-groups/{process-group}/input-ports";
 
-    private static final String CREATE_OUTPUT_PORT_URL = 
+    private static final String OUTPUT_PORT_URL = 
         "http://localhost:9090/nifi-api/process-groups/{process-group}/output-ports";
 
     private static final String TEST_URL =
@@ -38,27 +38,27 @@ public class NifiClient {
 
 
     public ProcessorEntity addProcessor(ProcessorEntity processor, String processGroupId) {
-        return this.restTemplate.postForObject(CREATE_PROCESSOR_URL, processor, ProcessorEntity.class, processGroupId);
+        return this.restTemplate.postForObject(PROCESSOR_URL, processor, ProcessorEntity.class, processGroupId);
     }
 
     public ConnectionEntity addConnection(ConnectionEntity connection, String processGroupId) {
-        return this.restTemplate.postForObject(CREATE_CONNECTION_URL, connection, ConnectionEntity.class, processGroupId);
+        return this.restTemplate.postForObject(CONNECTION_URL, connection, ConnectionEntity.class, processGroupId);
     }
 
     public ControllerServiceEntity addControllerService(ControllerServiceEntity controllerService, String processGroupId) {
-        return this.restTemplate.postForObject(CREATE_CONTROLLER_SERVICE_URL, controllerService, ControllerServiceEntity.class, processGroupId);
+        return this.restTemplate.postForObject(CONTROLLER_SERVICE_URL, controllerService, ControllerServiceEntity.class, processGroupId);
     }
 
     public ProcessGroupEntity addProcessGroup(ProcessGroupEntity processGroup, String processGroupId) {
-        return this.restTemplate.postForObject(CREATE_PROCESS_GROUP_URL, processGroup, ProcessGroupEntity.class, processGroupId);
+        return this.restTemplate.postForObject(PROCESS_GROUP_URL, processGroup, ProcessGroupEntity.class, processGroupId);
     }
 
     public PortEntity addInputPort(PortEntity inputPort, String processGroupId) {
-        return this.restTemplate.postForObject(CREATE_INPUT_PORT_URL, inputPort, PortEntity.class, processGroupId);
+        return this.restTemplate.postForObject(INPUT_PORT_URL, inputPort, PortEntity.class, processGroupId);
     }
 
     public PortEntity addOutputPort(PortEntity outputPort, String processGroupId) {
-        return this.restTemplate.postForObject(CREATE_OUTPUT_PORT_URL, outputPort, PortEntity.class, processGroupId);
+        return this.restTemplate.postForObject(OUTPUT_PORT_URL, outputPort, PortEntity.class, processGroupId);
     }
 
 }

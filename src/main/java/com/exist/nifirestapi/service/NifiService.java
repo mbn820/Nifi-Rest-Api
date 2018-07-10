@@ -5,6 +5,7 @@ import java.util.List;
 import com.exist.nifirestapi.builder.ConnectionBuilder;
 import com.exist.nifirestapi.client.NifiClient;
 
+import org.apache.nifi.web.api.dto.ComponentDTO;
 import org.apache.nifi.web.api.entity.ConnectionEntity;
 import org.apache.nifi.web.api.entity.ControllerServiceEntity;
 import org.apache.nifi.web.api.entity.PortEntity;

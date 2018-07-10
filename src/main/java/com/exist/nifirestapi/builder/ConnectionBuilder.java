@@ -6,7 +6,6 @@ import java.util.Set;
 import org.apache.nifi.web.api.dto.ConnectableDTO;
 import org.apache.nifi.web.api.dto.ConnectionDTO;
 import org.apache.nifi.web.api.dto.RevisionDTO;
-import org.apache.nifi.web.api.entity.ComponentEntity;
 import org.apache.nifi.web.api.entity.ConnectionEntity;
 import org.apache.nifi.web.api.entity.PortEntity;
 import org.apache.nifi.web.api.entity.ProcessorEntity;
@@ -54,8 +53,6 @@ public class ConnectionBuilder {
 
         return this;
     }
-
-    
 
     public ConnectionBuilder addConnectionRelationship(String relationship) {
         this.connectionRelationships.add(relationship);
