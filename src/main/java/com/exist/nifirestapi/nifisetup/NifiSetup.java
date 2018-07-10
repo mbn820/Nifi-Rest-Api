@@ -1,6 +1,6 @@
 package com.exist.nifirestapi.nifisetup;
 
-import java.util.ArrayList;
+import java.util.Arrays;
 
 import com.exist.nifirestapi.builder.ProcessGroupBuilder;
 import com.exist.nifirestapi.service.NifiService;
@@ -18,10 +18,11 @@ public class NifiSetup {
 
     @Autowired
 	private NifiService nifiService;
-	
+
 	private ProcessGroupEntity locationKeysProcessGroup;
 	private ProcessGroupEntity historicalDataProcessGroup;
 	private ProcessGroupEntity forecastDailyDataProcessGroup;
+	private ProcessGroupEntity forecastHourlyDataProcessGroup;
 
 
     @Bean
@@ -30,34 +31,44 @@ public class NifiSetup {
 
 			createProcessGroups();
 
-			LocationKeysProcessGroupSetup lKeyProcessGroupSetup = 
+			LocationKeysProcessGroupSetup lKeyProcessGroupSetup =
 				new LocationKeysProcessGroupSetup(nifiService, locationKeysProcessGroup);
 
-			HistoricalDataProcessGroupSetup hDataProcessGroupSetup =  
+			HistoricalDataProcessGroupSetup hDataProcessGroupSetup =
 				new HistoricalDataProcessGroupSetup(nifiService, historicalDataProcessGroup);
 
-			ForecastDataProcessGroupSetup fDataProcessGroupSetup = 
+			ForecastDataProcessGroupSetup fDataProcessGroupSetup =
 				new ForecastDataProcessGroupSetup(nifiService, forecastDailyDataProcessGroup);
+
+			ForecastHourlyProcessGroupSetup forecastHourlyProcessGroupSetup = 
+			    new ForecastHourlyProcessGroupSetup(nifiService, forecastHourlyDataProcessGroup);
 
 			lKeyProcessGroupSetup.setup();
 			hDataProcessGroupSetup.setup();
 			fDataProcessGroupSetup.setup();
+			forecastHourlyProcessGroupSetup.setup();
 
 			nifiService.connectComponents(
-				lKeyProcessGroupSetup.getOutputPort(), 
-				hDataProcessGroupSetup.getInputPort(), 
-				new ArrayList<String>(), 
+				lKeyProcessGroupSetup.getOutputPort(),
+				hDataProcessGroupSetup.getInputPort(),
+				Arrays.asList(),
 				"root");
 
 			nifiService.connectComponents(
-				lKeyProcessGroupSetup.getOutputPort(), 
+				lKeyProcessGroupSetup.getOutputPort(),
 				fDataProcessGroupSetup.getInputPort(), 
-				new ArrayList<String>(), 
+				Arrays.asList(),
 				"root");
-	
+
+			nifiService.connectComponents(
+				lKeyProcessGroupSetup.getOutputPort(),
+				forecastHourlyProcessGroupSetup.getInputPort(), 
+				Arrays.asList(),
+				"root");
+
         };
 	}
-	
+
 	public void createProcessGroups() {
 		this.locationKeysProcessGroup = nifiService.addProcessGroup(
             new ProcessGroupBuilder()
@@ -73,7 +84,7 @@ public class NifiSetup {
                 .name("GET HISTORICAL DATA")
                 .position(PositionUtil.rightOf(locationKeysProcessGroup))
                 .build(),
-				
+
 			"root"
         );
 
@@ -82,7 +93,16 @@ public class NifiSetup {
                 .name("GET FORECAST DATA")
                 .position(PositionUtil.leftOf(locationKeysProcessGroup))
                 .build(),
-				
+
+			"root"
+		);
+		
+		this.forecastHourlyDataProcessGroup = nifiService.addProcessGroup(
+            new ProcessGroupBuilder()
+                .name("GET FORECAST DATA")
+                .position(PositionUtil.belowOf(locationKeysProcessGroup))
+                .build(),
+
 			"root"
         );
 	}

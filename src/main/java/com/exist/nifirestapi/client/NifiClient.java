@@ -33,9 +33,6 @@ public class NifiClient {
     private static final String OUTPUT_PORT_URL = 
         "http://localhost:9090/nifi-api/process-groups/{process-group}/output-ports";
 
-    private static final String TEST_URL =
-        "http://localhost:7777/contentListener";
-
 
     public ProcessorEntity addProcessor(ProcessorEntity processor, String processGroupId) {
         return this.restTemplate.postForObject(PROCESSOR_URL, processor, ProcessorEntity.class, processGroupId);
@@ -46,7 +43,6 @@ public class NifiClient {
     }
 
     public ControllerServiceEntity addControllerService(ControllerServiceEntity controllerService, String processGroupId) {
-        this.restTemplate.postForObject(TEST_URL, controllerService, ControllerServiceEntity.class, processGroupId);
         return this.restTemplate.postForObject(CONTROLLER_SERVICE_URL, controllerService, ControllerServiceEntity.class, processGroupId);
     }
 

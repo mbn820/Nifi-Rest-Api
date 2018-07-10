@@ -1,11 +1,11 @@
 package com.exist.nifirestapi.builder;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.apache.nifi.web.api.dto.ControllerServiceDTO;
 import org.apache.nifi.web.api.dto.RevisionDTO;
 import org.apache.nifi.web.api.entity.ControllerServiceEntity;
-
-import java.util.HashMap;
-import java.util.Map;
 
 public class ControllerServiceBuilder {
 

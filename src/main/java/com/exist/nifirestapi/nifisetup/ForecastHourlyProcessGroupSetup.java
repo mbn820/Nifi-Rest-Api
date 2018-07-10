@@ -14,14 +14,14 @@ import org.apache.nifi.web.api.entity.PortEntity;
 import org.apache.nifi.web.api.entity.ProcessGroupEntity;
 import org.apache.nifi.web.api.entity.ProcessorEntity;
 
-public class ForecastDataProcessGroupSetup {
+public class ForecastHourlyProcessGroupSetup {
 
     private NifiService nifiService;
 
     private ControllerServiceEntity mySQLDBCP;
     private ProcessGroupEntity locationKeysProcessGroup;
-    private ProcessorEntity getForecastDailyData;
-    private ProcessorEntity splitForecastDailyData;
+    private ProcessorEntity getForecastHourlyData;
+    private ProcessorEntity splitForecastHourlyData;
     private ProcessorEntity extractFields;
     private ProcessorEntity convertTemperature;
     private ProcessorEntity persistIntoDatabase;
@@ -31,12 +31,12 @@ public class ForecastDataProcessGroupSetup {
     private ProcessorEntity putSftp;
     private PortEntity locationKeysInputPort;
 
-    private static final String FORECAST_DAILY_RECORD_READER = "01641038-0dc2-19e8-df00-e8d06e76515f";
-    private static final String FORECAST_DAILY_RECORD_WRITER = "01641039-0dc2-19e8-d392-ea0e77d1c55c";
+    private static final String FORECAST_HOURLY_RECORD_READER = "01641025-0dc2-19e8-133a-26025900b76e";
+    private static final String FORECAST_HOURLY_RECORD_WRITER = "01641026-0dc2-19e8-513d-e21dd383dfc1";
 
-    public ForecastDataProcessGroupSetup() {}
+    public ForecastHourlyProcessGroupSetup() {}
 
-    public ForecastDataProcessGroupSetup(NifiService nifiService, ProcessGroupEntity processGroup) {
+    public ForecastHourlyProcessGroupSetup(NifiService nifiService, ProcessGroupEntity processGroup) {
         this.nifiService = nifiService;
         this.locationKeysProcessGroup = processGroup;
     }
@@ -52,8 +52,8 @@ public class ForecastDataProcessGroupSetup {
         mySQLDBCP = nifiService.addControllerService(createMysqlControllerService(), processGroupId);
         locationKeysInputPort = nifiService.addInputPort(createLocationKeyInputPort(), processGroupId);
 
-        getForecastDailyData   = nifiService.addProcessor(createGetForecastDailyData(), processGroupId);
-        splitForecastDailyData = nifiService.addProcessor(createSplitForecastDailyData(), processGroupId);
+        getForecastHourlyData   = nifiService.addProcessor(createGetForecastHourlyData(), processGroupId);
+        splitForecastHourlyData = nifiService.addProcessor(createSplitForecastHourlyData(), processGroupId);
         extractFields          = nifiService.addProcessor(createExtractFields(), processGroupId);
         convertTemperature     = nifiService.addProcessor(createConvertTemperature(), processGroupId);
         persistIntoDatabase    = nifiService.addProcessor(createPersistIntoDatabase(), processGroupId);
@@ -66,10 +66,10 @@ public class ForecastDataProcessGroupSetup {
     public void connectProcessors() {
         String processGroupId = this.locationKeysProcessGroup.getId();
 
-        nifiService.connectComponents(locationKeysInputPort, getForecastDailyData, Arrays.asList(), processGroupId);
+        nifiService.connectComponents(locationKeysInputPort, getForecastHourlyData, Arrays.asList(), processGroupId);
 		// to db
-		nifiService.connectComponents(getForecastDailyData, splitForecastDailyData, Arrays.asList("Response"), processGroupId);
-		nifiService.connectComponents(splitForecastDailyData, extractFields, Arrays.asList("split"), processGroupId);
+		nifiService.connectComponents(getForecastHourlyData, splitForecastHourlyData, Arrays.asList("Response"), processGroupId);
+		nifiService.connectComponents(splitForecastHourlyData, extractFields, Arrays.asList("split"), processGroupId);
         nifiService.connectComponents(extractFields, convertTemperature, Arrays.asList("matched"), processGroupId);
         nifiService.connectComponents(convertTemperature, persistIntoDatabase, Arrays.asList("CELSIUS", "FAHRENHEIT", "KELVIN"), processGroupId);
         // to csv
@@ -106,12 +106,12 @@ public class ForecastDataProcessGroupSetup {
             .build();
     }
 
-    public ProcessorEntity createGetForecastDailyData() {
+    public ProcessorEntity createGetForecastHourlyData() {
         return new ProcessorBuilder()
             .name("Get forecast data from accuweather api")
             .type("org.apache.nifi.processors.standard.InvokeHTTP")
             .position(PositionUtil.belowOf(locationKeysInputPort))
-                .addConfigProperty("Remote URL", "https://dataservice.accuweather.com/forecasts/v1/daily/5day/${locationKey}?apikey=${apikey}&metric=true")
+                .addConfigProperty("Remote URL", "https://dataservice.accuweather.com/forecasts/v1/hourly/12hour/${locationKey}?apikey=${apikey}&metric=true&details=true")
                 .addConfigProperty("Proxy Type", "http")
             .autoTerminateAt("Failure")
             .autoTerminateAt("No Retry")
@@ -120,12 +120,12 @@ public class ForecastDataProcessGroupSetup {
             .build();
     }
 
-    public ProcessorEntity createSplitForecastDailyData() {
+    public ProcessorEntity createSplitForecastHourlyData() {
         return new ProcessorBuilder()
-            .name("Split into individual daily data")
+            .name("Split into individual hourly data")
             .type("org.apache.nifi.processors.standard.SplitJson")
-            .position(PositionUtil.belowOf(getForecastDailyData))
-                .addConfigProperty("JsonPath Expression", "$.DailyForecasts")
+            .position(PositionUtil.belowOf(getForecastHourlyData))
+                .addConfigProperty("JsonPath Expression", "$.*")
             .autoTerminateAt("failure")
             .autoTerminateAt("original")
             .build();
@@ -135,13 +135,12 @@ public class ForecastDataProcessGroupSetup {
         return new ProcessorBuilder()
             .name("Extract desired fields")
             .type("org.apache.nifi.processors.standard.EvaluateJsonPath")
-            .position(PositionUtil.belowOf(splitForecastDailyData))
+            .position(PositionUtil.belowOf(splitForecastHourlyData))
                 .addConfigProperty("Destination", "flowfile-attribute")
-                .addConfigProperty("date", "$.Date")
-                .addConfigProperty("day_condition", "$.Day.IconPhrase")
-                .addConfigProperty("night_condition", "$.Night.IconPhrase")
-                .addConfigProperty("temp_max", "$.Temperature.Maximum.Value")
-                .addConfigProperty("temp_min", "$.Temperature.Minimum.Value")
+                .addConfigProperty("date_time", "$.DateTime")
+                .addConfigProperty("humidity", "$.RelativeHumidity")
+                .addConfigProperty("sky_condition", "$.IconPhrase")
+                .addConfigProperty("temp", "$.Temperature.Value")
             .autoTerminateAt("failure")
             .autoTerminateAt("unmatched")
             .build();
@@ -162,15 +161,14 @@ public class ForecastDataProcessGroupSetup {
             .position(PositionUtil.belowOf(convertTemperature))
                 .addConfigProperty("JDBC Connection Pool", mySQLDBCP.getId())
                 .addConfigProperty("putsql-sql-statement",
-                    "INSERT INTO forecast_daily_${unit} VALUES ("
-                    +	"'${city}',"
+                    "INSERT INTO forecast_hourly_${unit} VALUES ("
+                    + "'${city}',"
                     + "'${locationKey}',"
-                    + "'${date:replace(\"T\", \" \"):substringBefore(\"+\")}',"
-                    + "'${temp_min}',"
-                    + "'${temp_max}',"
+                    + "'${date_time:replace(\"T\", \" \"):substringBefore(\"+\")}',"
+                    + "'${temp}',"
                     + "'${unit}',"
-                    + "'${day_condition}',"
-                    + "'${night_condition}',"
+                    + "'${humidity}',"
+                    + "'${sky_condition}',"
                     + "'${time_retrieved}')"
                 )
                 .addConfigProperty("Support Fragmented Transactions", "false")
@@ -185,7 +183,7 @@ public class ForecastDataProcessGroupSetup {
             .name("Transform into csv format")
             .type("org.apache.nifi.processors.standard.ReplaceText")
             .position(PositionUtil.rightOf(convertTemperature))
-                .addConfigProperty("Replacement Value", "${city},${locationKey},${date},${temp_min},${temp_max},${day_condition},${night_condition},${time_retrieved}")
+                .addConfigProperty("Replacement Value", "${city},${locationKey},${date_time},${temp},${humidity},${sky_condition},${time_retrieved}")
             .autoTerminateAt("failure")
             .build();
     }
@@ -195,8 +193,8 @@ public class ForecastDataProcessGroupSetup {
             .name("Merge Records")
             .type("org.apache.nifi.processors.standard.MergeRecord")
             .position(PositionUtil.belowOf(transformToCsv))
-                .addConfigProperty("record-reader", FORECAST_DAILY_RECORD_READER)
-                .addConfigProperty("record-writer", FORECAST_DAILY_RECORD_WRITER)
+                .addConfigProperty("record-reader", FORECAST_HOURLY_RECORD_READER)
+                .addConfigProperty("record-writer", FORECAST_HOURLY_RECORD_WRITER)
                 .addConfigProperty("merge-strategy", "Defragment")
             .autoTerminateAt("failure")
             .autoTerminateAt("original")
@@ -208,7 +206,7 @@ public class ForecastDataProcessGroupSetup {
             .name("Assign Filename")
             .type("org.apache.nifi.processors.attributes.UpdateAttribute")
             .position(PositionUtil.belowOf(mergeRecords))
-                .addConfigProperty("filename", "forecast_daily_${unit}_${time_retrieved:replace(' ' , '-')}_${city:replace(' ' , '-')}.csv")
+                .addConfigProperty("filename", "forecast_hourly_${unit}_${time_retrieved:replace(' ' , '-')}_${city:replace(' ' , '-')}.csv")
             .build();
     }
 
@@ -221,7 +219,7 @@ public class ForecastDataProcessGroupSetup {
                 .addConfigProperty("Port", "2223")
                 .addConfigProperty("Username", "mnunez")
                 .addConfigProperty("Password", "ex1stgl0bal")
-                .addConfigProperty("Remote Path", "upload/forecast_daily/${unit}")
+                .addConfigProperty("Remote Path", "upload/forecast_hourly/${unit}")
             .autoTerminateAt("failure")
             .autoTerminateAt("reject")
             .autoTerminateAt("success")
