@@ -11,20 +11,20 @@ public class PortBuilder {
     private String type;
     private PositionDTO position;
 
-    public PortBuilder name(String name) {
-        this.name = name;
+    public PortBuilder name(String portName) {
+        this.name = portName;
 
         return this;
     }
 
-    public PortBuilder type(String type) {
-        this.type = type; 
+    public PortBuilder type(String portType) {
+        this.type = portType; 
 
         return this;
     }
 
-    public PortBuilder position(PositionDTO position) {
-        this.position = position;
+    public PortBuilder position(PositionDTO portPosition) {
+        this.position = portPosition;
         
         return this;
     }

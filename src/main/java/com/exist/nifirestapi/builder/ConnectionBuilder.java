@@ -3,10 +3,15 @@ package com.exist.nifirestapi.builder;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.apache.nifi.web.api.dto.ComponentDTO;
 import org.apache.nifi.web.api.dto.ConnectableDTO;
 import org.apache.nifi.web.api.dto.ConnectionDTO;
+import org.apache.nifi.web.api.dto.PortDTO;
+import org.apache.nifi.web.api.dto.ProcessorDTO;
 import org.apache.nifi.web.api.dto.RevisionDTO;
+import org.apache.nifi.web.api.entity.ComponentEntity;
 import org.apache.nifi.web.api.entity.ConnectionEntity;
+import org.apache.nifi.web.api.entity.Permissible;
 import org.apache.nifi.web.api.entity.PortEntity;
 import org.apache.nifi.web.api.entity.ProcessorEntity;
 
@@ -22,34 +27,19 @@ public class ConnectionBuilder {
 
     private Set<String> connectionRelationships = new HashSet<>();
 
-    public ConnectionBuilder source(ProcessorEntity source) {
-        this.sourceId = source.getId();
-        this.sourceGroupId = source.getComponent().getParentGroupId();
+
+    public <T extends ComponentEntity & Permissible<? extends ComponentDTO>> ConnectionBuilder source(T sourceComponent) {
+        this.sourceId = sourceComponent.getId();
+        this.sourceGroupId = sourceComponent.getComponent().getParentGroupId();
         this.sourceType = "PROCESSOR";
 
         return this;
     }
 
-    public ConnectionBuilder destination(ProcessorEntity destination) {
-        this.destinationId = destination.getId();
-        this.destinationGroupId = destination.getComponent().getParentGroupId();
+    public <T extends ComponentEntity & Permissible<? extends ComponentDTO>> ConnectionBuilder destination(T destinationComponent) {
+        this.destinationId = destinationComponent.getId();
+        this.destinationGroupId = destinationComponent.getComponent().getParentGroupId();
         this.destinationType = "PROCESSOR";
-
-        return this;
-    }
-
-    public ConnectionBuilder source(PortEntity source) {
-        this.sourceId = source.getId();
-        this.sourceGroupId = source.getComponent().getParentGroupId();
-        this.sourceType = source.getPortType();
-
-        return this;
-    }
-
-    public ConnectionBuilder destination(PortEntity destination) {
-        this.destinationId = destination.getId();
-        this.destinationGroupId = destination.getComponent().getParentGroupId();
-        this.destinationType = destination.getPortType();
 
         return this;
     }

@@ -14,18 +14,18 @@ public class ControllerServiceBuilder {
     private String state;
     private Map<String, String> properties = new HashMap<>();
 
-    public ControllerServiceBuilder name(String name) {
-        this.name = name;
+    public ControllerServiceBuilder name(String controllerName) {
+        this.name = controllerName;
         return this;
     }
 
-    public ControllerServiceBuilder type(String type) {
-        this.type =  type;
+    public ControllerServiceBuilder type(String controllerType) {
+        this.type = controllerType;
         return this;
     }
 
-    public ControllerServiceBuilder state(String state) {
-        this.state = state;
+    public ControllerServiceBuilder state(String controllerState) {
+        this.state = controllerState;
         return this;
     }
 

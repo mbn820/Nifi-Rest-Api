@@ -1,4 +1,4 @@
-package com.exist.nifirestapi;
+package com.exist.nifirestapi.nifisetup;
 
 import java.util.Arrays;
 import java.util.List;
@@ -12,26 +12,37 @@ import org.apache.nifi.web.api.dto.PositionDTO;
 import org.apache.nifi.web.api.entity.PortEntity;
 import org.apache.nifi.web.api.entity.ProcessGroupEntity;
 import org.apache.nifi.web.api.entity.ProcessorEntity;
-import org.springframework.beans.factory.annotation.Autowired;
 
 public class LocationKeysProcessGroupSetup {
 
-    @Autowired
     private NifiService nifiService;
-
     private ProcessGroupEntity locationKeysProcessGroup;
-
     private ProcessorEntity loadCities;
     private ProcessorEntity assignTimeStamp;
     private ProcessorEntity splitCities;
     private ProcessorEntity extractCity;
     private ProcessorEntity getLocationKeys;
     private ProcessorEntity extractLocationKey;
-
     private PortEntity locationKeyOutputPort;
 
+    public LocationKeysProcessGroupSetup() {}
+
+    public LocationKeysProcessGroupSetup(NifiService nifiService, ProcessGroupEntity processGroup) {
+        this.nifiService = nifiService;
+        this.locationKeysProcessGroup = processGroup;
+    }
+
+    public void setup() {
+        addProcessors();
+        connectProcessors();
+    }
+
     public void setProcessGroup(ProcessGroupEntity processGroup) {
-       
+       this.locationKeysProcessGroup = processGroup;
+    }
+
+    public void setNifiService(NifiService nifiService) {
+        this.nifiService = nifiService;
     }
 
     private void addProcessors() {
@@ -43,23 +54,27 @@ public class LocationKeysProcessGroupSetup {
         extractCity        = nifiService.addProcessor(createExtractCity(), processGroupId);
         getLocationKeys    = nifiService.addProcessor(createGetLocationKeys(), processGroupId);
         extractLocationKey = nifiService.addProcessor(createExtractLocationKeys(), processGroupId);
+
+        locationKeyOutputPort = nifiService.addOutputPort(createLocationKeysOutputPort(), processGroupId);
     }
 
     private void connectProcessors() {
         String processGroupId = this.locationKeysProcessGroup.getId();
 
-        List<String> con1 = Arrays.asList("success");
-        List<String> con2 = Arrays.asList("success");
-        List<String> con3 = Arrays.asList("split");
-        List<String> con4 = Arrays.asList("matched");
-        List<String> con5 = Arrays.asList("Response");
+        nifiService.connectComponents(loadCities, assignTimeStamp, Arrays.asList("success"), processGroupId);
+        nifiService.connectComponents(assignTimeStamp, splitCities, Arrays.asList("success"), processGroupId);
+        nifiService.connectComponents(splitCities, extractCity, Arrays.asList("split"), processGroupId);
+        nifiService.connectComponents(extractCity, getLocationKeys, Arrays.asList("matched"), processGroupId);
+        nifiService.connectComponents(getLocationKeys, extractLocationKey, Arrays.asList("Response"), processGroupId);
 
-        nifiService.connectProcessors(loadCities, assignTimeStamp, con1, processGroupId);
-        nifiService.connectProcessors(assignTimeStamp, splitCities, con2, processGroupId);
-        nifiService.connectProcessors(splitCities, extractCity, con3, processGroupId);
-        nifiService.connectProcessors(extractCity, getLocationKeys, con4, processGroupId);
-        nifiService.connectProcessors(getLocationKeys, extractLocationKey, con5, processGroupId);
+        nifiService.connectComponents(extractLocationKey, locationKeyOutputPort, Arrays.asList("matched"), processGroupId);
     }
+
+    public PortEntity getOutputPort() {
+        return locationKeyOutputPort;
+    }
+
+    //////////////////////////////////////////////////////////////////////////////////////////////////////
 
     public ProcessorEntity createLoadCities() {
         return new ProcessorBuilder()
@@ -74,7 +89,7 @@ public class LocationKeysProcessGroupSetup {
                 + "{ \"city\": \"Pasig\" },"
                 + "{ \"city\": \"Quezon City\" }]"
                 )
-            .build();
+            .build();        
     }
 
     public ProcessorEntity createAssignTimeStamp() {
@@ -146,7 +161,4 @@ public class LocationKeysProcessGroupSetup {
             .build();
     }
 
-    public void connect(ProcessorEntity source, ProcessorEntity destination, List<String> con) {
-        
-    }
 }

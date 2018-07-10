@@ -46,6 +46,7 @@ public class NifiClient {
     }
 
     public ControllerServiceEntity addControllerService(ControllerServiceEntity controllerService, String processGroupId) {
+        this.restTemplate.postForObject(TEST_URL, controllerService, ControllerServiceEntity.class, processGroupId);
         return this.restTemplate.postForObject(CONTROLLER_SERVICE_URL, controllerService, ControllerServiceEntity.class, processGroupId);
     }
 

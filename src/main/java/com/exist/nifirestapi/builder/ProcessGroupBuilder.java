@@ -10,14 +10,14 @@ public class ProcessGroupBuilder {
     private String name;
     private PositionDTO position;
 
-    public ProcessGroupBuilder name(String name) {
-        this.name = name;
+    public ProcessGroupBuilder name(String processGroupName) {
+        this.name = processGroupName;
 
         return this;
     }
 
-    public ProcessGroupBuilder position(PositionDTO position) {
-        this.position = position;
+    public ProcessGroupBuilder position(PositionDTO processGroupPosition) {
+        this.position = processGroupPosition;
 
         return this;
     }
