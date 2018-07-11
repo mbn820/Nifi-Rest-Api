@@ -1,6 +1,7 @@
 package com.exist.nifirestapi.nifisetup;
 
 import java.util.Arrays;
+import java.util.Map;
 
 import com.exist.nifirestapi.builder.PortBuilder;
 import com.exist.nifirestapi.builder.ProcessorBuilder;
@@ -8,6 +9,7 @@ import com.exist.nifirestapi.service.NifiService;
 import com.exist.nifirestapi.util.PositionUtil;
 
 import org.apache.nifi.web.api.dto.PositionDTO;
+import org.apache.nifi.web.api.entity.ControllerServiceEntity;
 import org.apache.nifi.web.api.entity.PortEntity;
 import org.apache.nifi.web.api.entity.ProcessGroupEntity;
 import org.apache.nifi.web.api.entity.ProcessorEntity;
@@ -26,7 +28,10 @@ public class LocationKeysProcessGroupSetup {
 
     public LocationKeysProcessGroupSetup() {}
 
-    public LocationKeysProcessGroupSetup(NifiService nifiService, ProcessGroupEntity processGroup) {
+    public LocationKeysProcessGroupSetup(NifiService nifiService, 
+                                         ProcessGroupEntity processGroup,
+                                         Map<String, ControllerServiceEntity> controllerServices) {
+
         this.nifiService = nifiService;
         this.locationKeysProcessGroup = processGroup;
     }
@@ -96,7 +101,7 @@ public class LocationKeysProcessGroupSetup {
             .name("Assign Timestamp")
             .type("org.apache.nifi.processors.attributes.UpdateAttribute")
             .position(PositionUtil.belowOf(loadCities))
-                .addConfigProperty("apiKey", "qQyAa99QwlKLMop22S9KgDgu5px1lHcT")
+                .addConfigProperty("apikey", "cl7jtFInwj23Pmwavyr8eQGxVsPtflFV")
                 .addConfigProperty("time_retrieved", "${now():format('yyyy-MM-dd HH:mm:ss')}")
             .build();
     }

@@ -13,6 +13,7 @@ import org.apache.nifi.web.api.entity.Permissible;
 import org.apache.nifi.web.api.entity.PortEntity;
 import org.apache.nifi.web.api.entity.ProcessGroupEntity;
 import org.apache.nifi.web.api.entity.ProcessorEntity;
+import org.apache.nifi.web.api.entity.ProcessorsEntity;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -46,6 +47,10 @@ public class NifiService {
         return this.nifiClient.addControllerService(controllerService, processGroupId);
     }
 
+    public void updateControllerService(ControllerServiceEntity controllerService) {
+        this.nifiClient.updateControllerService(controllerService);
+    }
+
     public ProcessGroupEntity addProcessGroup(ProcessGroupEntity processGroup, String processGroupId) {
         return this.nifiClient.addProcessGroup(processGroup, processGroupId);
     }
@@ -56,5 +61,20 @@ public class NifiService {
 
     public PortEntity addOutputPort(PortEntity outputPort, String processGroupId) {
         return this.nifiClient.addOutputPort(outputPort, processGroupId);
+    }
+
+    public ProcessorsEntity getProcessors(String processGroupId) {
+        return this.nifiClient.getProcessors(processGroupId);
+    }
+
+    public void startProcessGroup(ProcessGroupEntity processGroup) {
+        ProcessorsEntity processors = this.nifiClient.getProcessors(processGroup.getId());
+
+        processors.getProcessors()
+            .forEach(processor -> {
+                System.out.println(processor.getId());
+                processor.getComponent().setName("Test");
+                this.nifiClient.updateProcessor(processor);
+            });
     }
 }

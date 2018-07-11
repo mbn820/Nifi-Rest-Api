@@ -10,23 +10,32 @@ import org.apache.nifi.web.api.dto.RevisionDTO;
 import org.apache.nifi.web.api.entity.ComponentEntity;
 import org.apache.nifi.web.api.entity.ConnectionEntity;
 import org.apache.nifi.web.api.entity.Permissible;
+import org.apache.nifi.web.api.entity.PortEntity;
+import org.apache.nifi.web.api.entity.ProcessorEntity;
 
 public class ConnectionBuilder {
 
     private String sourceId;
     private String sourceGroupId;
-    private String sourceType;
+    private String sourceType = "PROCESSOR";
 
     private String destinationId;
     private String destinationGroupId;
-    private String destinationType;
+    private String destinationType = "PROCESSOR";
 
     private Set<String> connectionRelationships = new HashSet<>();
 
     public <T extends ComponentEntity & Permissible<? extends ComponentDTO>> ConnectionBuilder source(T sourceComponent) {
         this.sourceId = sourceComponent.getId();
         this.sourceGroupId = sourceComponent.getComponent().getParentGroupId();
-        this.sourceType = "PROCESSOR";
+
+        if (sourceComponent instanceof ProcessorEntity) {
+            this.sourceType = "PROCESSOR";
+        }
+
+        if (sourceComponent instanceof PortEntity) {
+            this.sourceType = ((PortEntity) sourceComponent).getPortType();
+        }
 
         return this;
     }
@@ -34,7 +43,14 @@ public class ConnectionBuilder {
     public <T extends ComponentEntity & Permissible<? extends ComponentDTO>> ConnectionBuilder destination(T destinationComponent) {
         this.destinationId = destinationComponent.getId();
         this.destinationGroupId = destinationComponent.getComponent().getParentGroupId();
-        this.destinationType = "PROCESSOR";
+
+        if (destinationComponent instanceof ProcessorEntity) {
+            this.sourceType = "PROCESSOR";
+        }
+
+        if (destinationComponent instanceof PortEntity) {
+            this.sourceType = ((PortEntity) destinationComponent).getPortType();
+        }
 
         return this;
     }

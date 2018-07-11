@@ -1,6 +1,7 @@
 package com.exist.nifirestapi.nifisetup;
 
 import java.util.Arrays;
+import java.util.Map;
 
 import com.exist.nifirestapi.builder.ControllerServiceBuilder;
 import com.exist.nifirestapi.builder.PortBuilder;
@@ -31,14 +32,20 @@ public class ForecastDataProcessGroupSetup {
     private ProcessorEntity putSftp;
     private PortEntity locationKeysInputPort;
 
-    private static final String FORECAST_DAILY_RECORD_READER = "01641038-0dc2-19e8-df00-e8d06e76515f";
-    private static final String FORECAST_DAILY_RECORD_WRITER = "01641039-0dc2-19e8-d392-ea0e77d1c55c";
+    private String FORECAST_DAILY_RECORD_READER;
+    private String FORECAST_DAILY_RECORD_WRITER;
 
     public ForecastDataProcessGroupSetup() {}
 
-    public ForecastDataProcessGroupSetup(NifiService nifiService, ProcessGroupEntity processGroup) {
+    public ForecastDataProcessGroupSetup(NifiService nifiService, 
+                                         ProcessGroupEntity processGroup,
+                                         Map<String, ControllerServiceEntity> controllerServices) {
+
         this.nifiService = nifiService;
         this.locationKeysProcessGroup = processGroup;
+        this.mySQLDBCP = controllerServices.get("mySQLDBCP");
+        this.FORECAST_DAILY_RECORD_READER = controllerServices.get("csvReaderDailyData").getId();
+        this.FORECAST_DAILY_RECORD_WRITER = controllerServices.get("csvWriterWeatherData").getId();
     }
 
     public void setup() {
@@ -49,7 +56,6 @@ public class ForecastDataProcessGroupSetup {
     public void addProcessors() {
         String processGroupId = this.locationKeysProcessGroup.getId();
 
-        mySQLDBCP = nifiService.addControllerService(createMysqlControllerService(), processGroupId);
         locationKeysInputPort = nifiService.addInputPort(createLocationKeyInputPort(), processGroupId);
 
         getForecastDailyData   = nifiService.addProcessor(createGetForecastDailyData(), processGroupId);
@@ -84,19 +90,6 @@ public class ForecastDataProcessGroupSetup {
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    public ControllerServiceEntity createMysqlControllerService() {
-		return new ControllerServiceBuilder()
-	        .name("mySQLDBCP")
-	        .type("org.apache.nifi.dbcp.DBCPConnectionPool")
-	            .addProperty("Database Connection URL", "jdbc:mysql://localhost:3306/weatherdatabase")
-                .addProperty("Database Driver Class Name", "com.mysql.jdbc.Driver")
-                .addProperty("database-driver-locations", "/home/mnunez/DBDriver/mysql-connector-java-8.0.11.jar")
-				.addProperty("Database User", "root")
-				.addProperty("Password", "ex1stgl0bal")
-			.state("DISABLED")
-			.build();
-	}
 
     public PortEntity createLocationKeyInputPort() {
         return new PortBuilder()

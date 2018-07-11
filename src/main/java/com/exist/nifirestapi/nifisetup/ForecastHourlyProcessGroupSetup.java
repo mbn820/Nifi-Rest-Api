@@ -1,6 +1,7 @@
 package com.exist.nifirestapi.nifisetup;
 
 import java.util.Arrays;
+import java.util.Map;
 
 import com.exist.nifirestapi.builder.ControllerServiceBuilder;
 import com.exist.nifirestapi.builder.PortBuilder;
@@ -31,14 +32,20 @@ public class ForecastHourlyProcessGroupSetup {
     private ProcessorEntity putSftp;
     private PortEntity locationKeysInputPort;
 
-    private static final String FORECAST_HOURLY_RECORD_READER = "01641025-0dc2-19e8-133a-26025900b76e";
-    private static final String FORECAST_HOURLY_RECORD_WRITER = "01641026-0dc2-19e8-513d-e21dd383dfc1";
+    private String FORECAST_HOURLY_RECORD_READER;
+    private String FORECAST_HOURLY_RECORD_WRITER;
 
     public ForecastHourlyProcessGroupSetup() {}
 
-    public ForecastHourlyProcessGroupSetup(NifiService nifiService, ProcessGroupEntity processGroup) {
+    public ForecastHourlyProcessGroupSetup(NifiService nifiService, 
+                                           ProcessGroupEntity processGroup,
+                                           Map<String, ControllerServiceEntity> controllerServices) {
+
         this.nifiService = nifiService;
         this.locationKeysProcessGroup = processGroup;
+        this.mySQLDBCP = controllerServices.get("mySQLDBCP");
+        this.FORECAST_HOURLY_RECORD_READER = controllerServices.get("csvReaderHourlyData").getId();
+        this.FORECAST_HOURLY_RECORD_WRITER = controllerServices.get("csvWriterWeatherData").getId();
     }
 
     public void setup() {
@@ -49,18 +56,17 @@ public class ForecastHourlyProcessGroupSetup {
     public void addProcessors() {
         String processGroupId = this.locationKeysProcessGroup.getId();
 
-        mySQLDBCP = nifiService.addControllerService(createMysqlControllerService(), processGroupId);
         locationKeysInputPort = nifiService.addInputPort(createLocationKeyInputPort(), processGroupId);
 
         getForecastHourlyData   = nifiService.addProcessor(createGetForecastHourlyData(), processGroupId);
         splitForecastHourlyData = nifiService.addProcessor(createSplitForecastHourlyData(), processGroupId);
-        extractFields          = nifiService.addProcessor(createExtractFields(), processGroupId);
-        convertTemperature     = nifiService.addProcessor(createConvertTemperature(), processGroupId);
-        persistIntoDatabase    = nifiService.addProcessor(createPersistIntoDatabase(), processGroupId);
-        transformToCsv         = nifiService.addProcessor(createTransformToCsv(), processGroupId);
-        mergeRecords           = nifiService.addProcessor(createMergeRecords(), processGroupId);
-        assignFilename         = nifiService.addProcessor(createAssignFilename(), processGroupId);
-        putSftp                = nifiService.addProcessor(createPutSftp(), processGroupId);
+        extractFields           = nifiService.addProcessor(createExtractFields(), processGroupId);
+        convertTemperature      = nifiService.addProcessor(createConvertTemperature(), processGroupId);
+        persistIntoDatabase     = nifiService.addProcessor(createPersistIntoDatabase(), processGroupId);
+        transformToCsv          = nifiService.addProcessor(createTransformToCsv(), processGroupId);
+        mergeRecords            = nifiService.addProcessor(createMergeRecords(), processGroupId);
+        assignFilename          = nifiService.addProcessor(createAssignFilename(), processGroupId);
+        putSftp                 = nifiService.addProcessor(createPutSftp(), processGroupId);
     }
 
     public void connectProcessors() {
@@ -84,19 +90,6 @@ public class ForecastHourlyProcessGroupSetup {
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    public ControllerServiceEntity createMysqlControllerService() {
-		return new ControllerServiceBuilder()
-	        .name("mySQLDBCP")
-	        .type("org.apache.nifi.dbcp.DBCPConnectionPool")
-	            .addProperty("Database Connection URL", "jdbc:mysql://localhost:3306/weatherdatabase")
-                .addProperty("Database Driver Class Name", "com.mysql.jdbc.Driver")
-                .addProperty("database-driver-locations", "/home/mnunez/DBDriver/mysql-connector-java-8.0.11.jar")
-				.addProperty("Database User", "root")
-				.addProperty("Password", "ex1stgl0bal")
-			.state("DISABLED")
-			.build();
-	}
 
     public PortEntity createLocationKeyInputPort() {
         return new PortBuilder()
