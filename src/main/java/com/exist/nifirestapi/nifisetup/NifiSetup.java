@@ -221,3 +221,5 @@ public class NifiSetup {
 	}
 
 }
+
+// branch remoteProcessGroup
