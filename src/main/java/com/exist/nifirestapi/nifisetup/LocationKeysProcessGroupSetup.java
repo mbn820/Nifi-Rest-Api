@@ -42,7 +42,7 @@ public class LocationKeysProcessGroupSetup {
     }
 
     public void setProcessGroup(ProcessGroupEntity processGroup) {
-       this.locationKeysProcessGroup = processGroup;
+        this.locationKeysProcessGroup = processGroup;
     }
 
     public void setNifiService(NifiService nifiService) {

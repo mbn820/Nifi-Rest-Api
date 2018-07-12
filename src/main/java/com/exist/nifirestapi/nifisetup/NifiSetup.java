@@ -75,8 +75,6 @@ public class NifiSetup {
 				Arrays.asList(),
 				parentProcessGroup.getId());
 
-			// nifiService.startProcessGroup(locationKeysProcessGroup);
-
         };
 	}
 
@@ -163,7 +161,7 @@ public class NifiSetup {
 					.addProperty("Database Driver Class Name", "com.mysql.jdbc.Driver")
 					.addProperty("database-driver-locations", "/home/mnunez/DBDriver/mysql-connector-java-8.0.11.jar")
 					.addProperty("Database User", "root")
-					.addProperty("Password", "ex1stgl0bal")
+					.addProperty("Password", "")
 					.addProperty("Max Wait Time", "2000 millis")
 					.addProperty("Max Total Connections", "20")
 				.state("DISABLED")

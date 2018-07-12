@@ -1,5 +1,6 @@
 package com.exist.nifirestapi;
 
+import com.exist.nifirestapi.client.NifiClient;
 import java.text.SimpleDateFormat;
 
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
@@ -25,6 +26,13 @@ public class AppConfig {
 		    .serializationInclusion(Include.NON_NULL);
 
 		return jackson2ObjectMapperBuilder;
+	}
+
+	@Bean
+	public NifiClient nifiClient(RestTemplate restTemplate) {
+		NifiClient nifiClient = new NifiClient(restTemplate);
+
+		return nifiClient;
 	}
 
 }

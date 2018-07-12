@@ -3,7 +3,6 @@ package com.exist.nifirestapi.nifisetup;
 import java.util.Arrays;
 import java.util.Map;
 
-import com.exist.nifirestapi.builder.ControllerServiceBuilder;
 import com.exist.nifirestapi.builder.PortBuilder;
 import com.exist.nifirestapi.builder.ProcessorBuilder;
 import com.exist.nifirestapi.service.NifiService;
@@ -18,9 +17,10 @@ import org.apache.nifi.web.api.entity.ProcessorEntity;
 public class ForecastDataProcessGroupSetup {
 
     private NifiService nifiService;
-
-    private ControllerServiceEntity mySQLDBCP;
     private ProcessGroupEntity locationKeysProcessGroup;
+    private ControllerServiceEntity mySQLDBCP;
+    private ControllerServiceEntity forecastDailyRecordReader;
+    private ControllerServiceEntity forecastDailyRecordWriter;
     private ProcessorEntity getForecastDailyData;
     private ProcessorEntity splitForecastDailyData;
     private ProcessorEntity extractFields;
@@ -32,8 +32,6 @@ public class ForecastDataProcessGroupSetup {
     private ProcessorEntity putSftp;
     private PortEntity locationKeysInputPort;
 
-    private String FORECAST_DAILY_RECORD_READER;
-    private String FORECAST_DAILY_RECORD_WRITER;
 
     public ForecastDataProcessGroupSetup() {}
 
@@ -44,8 +42,8 @@ public class ForecastDataProcessGroupSetup {
         this.nifiService = nifiService;
         this.locationKeysProcessGroup = processGroup;
         this.mySQLDBCP = controllerServices.get("mySQLDBCP");
-        this.FORECAST_DAILY_RECORD_READER = controllerServices.get("csvReaderDailyData").getId();
-        this.FORECAST_DAILY_RECORD_WRITER = controllerServices.get("csvWriterWeatherData").getId();
+        this.forecastDailyRecordReader = controllerServices.get("csvReaderDailyData");
+        this.forecastDailyRecordWriter = controllerServices.get("csvWriterWeatherData");
     }
 
     public void setup() {
@@ -188,8 +186,8 @@ public class ForecastDataProcessGroupSetup {
             .name("Merge Records")
             .type("org.apache.nifi.processors.standard.MergeRecord")
             .position(PositionUtil.belowOf(transformToCsv))
-                .addConfigProperty("record-reader", FORECAST_DAILY_RECORD_READER)
-                .addConfigProperty("record-writer", FORECAST_DAILY_RECORD_WRITER)
+                .addConfigProperty("record-reader", forecastDailyRecordReader.getId())
+                .addConfigProperty("record-writer", forecastDailyRecordWriter.getId())
                 .addConfigProperty("merge-strategy", "Defragment")
             .autoTerminateAt("failure")
             .autoTerminateAt("original")

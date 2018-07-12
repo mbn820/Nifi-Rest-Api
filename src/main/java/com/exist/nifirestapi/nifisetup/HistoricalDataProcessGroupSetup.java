@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Map;
 
-import com.exist.nifirestapi.builder.ControllerServiceBuilder;
 import com.exist.nifirestapi.builder.PortBuilder;
 import com.exist.nifirestapi.builder.ProcessorBuilder;
 import com.exist.nifirestapi.service.NifiService;
@@ -19,8 +18,10 @@ import org.apache.nifi.web.api.entity.ProcessorEntity;
 public class HistoricalDataProcessGroupSetup {
 
     private NifiService nifiService;
-    private ControllerServiceEntity mySQLDBCP;
     private ProcessGroupEntity locationKeysProcessGroup;
+    private ControllerServiceEntity mySQLDBCP;
+    private ControllerServiceEntity historicalRecordReader;
+    private ControllerServiceEntity historicalRecordWriter;
     private ProcessorEntity getHistoricalData;
     private ProcessorEntity splitHistoricalData;
     private ProcessorEntity extractFields;
@@ -32,8 +33,6 @@ public class HistoricalDataProcessGroupSetup {
     private ProcessorEntity putSftp;
     private PortEntity locationKeysInputPort;
 
-    private String HISTORICAL_RECORD_READER = "01641025-0dc2-19e8-133a-26025900b76e";
-    private String HISTORICAL_RECORD_WRITER = "01641026-0dc2-19e8-513d-e21dd383dfc1";
 
     public HistoricalDataProcessGroupSetup() {}
     
@@ -44,8 +43,8 @@ public class HistoricalDataProcessGroupSetup {
         this.nifiService = nifiService;
         this.locationKeysProcessGroup = processGroup;
         this.mySQLDBCP = controllerServices.get("mySQLDBCP");
-        this.HISTORICAL_RECORD_READER = controllerServices.get("csvReaderHourlyData").getId();
-        this.HISTORICAL_RECORD_WRITER = controllerServices.get("csvWriterWeatherData").getId();
+        this.historicalRecordReader = controllerServices.get("csvReaderHourlyData");
+        this.historicalRecordWriter = controllerServices.get("csvWriterWeatherData");
     }
 
     public void setup() {
@@ -186,8 +185,8 @@ public class HistoricalDataProcessGroupSetup {
             .name("Merge Records")
             .type("org.apache.nifi.processors.standard.MergeRecord")
             .position(PositionUtil.belowOf(transformToCsv))
-                .addConfigProperty("record-reader", HISTORICAL_RECORD_READER)
-                .addConfigProperty("record-writer", HISTORICAL_RECORD_WRITER)
+                .addConfigProperty("record-reader", historicalRecordReader.getId())
+                .addConfigProperty("record-writer", historicalRecordWriter.getId())
                 .addConfigProperty("merge-strategy", "Defragment")
             .autoTerminateAt("failure")
             .autoTerminateAt("original")

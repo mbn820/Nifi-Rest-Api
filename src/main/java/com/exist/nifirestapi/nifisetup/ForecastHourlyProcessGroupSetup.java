@@ -18,9 +18,10 @@ import org.apache.nifi.web.api.entity.ProcessorEntity;
 public class ForecastHourlyProcessGroupSetup {
 
     private NifiService nifiService;
-
-    private ControllerServiceEntity mySQLDBCP;
     private ProcessGroupEntity locationKeysProcessGroup;
+    private ControllerServiceEntity mySQLDBCP;
+    private ControllerServiceEntity forecastHourlyRecordReader;
+    private ControllerServiceEntity forecastHourlyRecordWriter;
     private ProcessorEntity getForecastHourlyData;
     private ProcessorEntity splitForecastHourlyData;
     private ProcessorEntity extractFields;
@@ -32,8 +33,6 @@ public class ForecastHourlyProcessGroupSetup {
     private ProcessorEntity putSftp;
     private PortEntity locationKeysInputPort;
 
-    private String FORECAST_HOURLY_RECORD_READER;
-    private String FORECAST_HOURLY_RECORD_WRITER;
 
     public ForecastHourlyProcessGroupSetup() {}
 
@@ -44,8 +43,8 @@ public class ForecastHourlyProcessGroupSetup {
         this.nifiService = nifiService;
         this.locationKeysProcessGroup = processGroup;
         this.mySQLDBCP = controllerServices.get("mySQLDBCP");
-        this.FORECAST_HOURLY_RECORD_READER = controllerServices.get("csvReaderHourlyData").getId();
-        this.FORECAST_HOURLY_RECORD_WRITER = controllerServices.get("csvWriterWeatherData").getId();
+        this.forecastHourlyRecordReader = controllerServices.get("csvReaderHourlyData");
+        this.forecastHourlyRecordWriter = controllerServices.get("csvWriterWeatherData");
     }
 
     public void setup() {
@@ -186,8 +185,8 @@ public class ForecastHourlyProcessGroupSetup {
             .name("Merge Records")
             .type("org.apache.nifi.processors.standard.MergeRecord")
             .position(PositionUtil.belowOf(transformToCsv))
-                .addConfigProperty("record-reader", FORECAST_HOURLY_RECORD_READER)
-                .addConfigProperty("record-writer", FORECAST_HOURLY_RECORD_WRITER)
+                .addConfigProperty("record-reader", forecastHourlyRecordReader.getId())
+                .addConfigProperty("record-writer", forecastHourlyRecordWriter.getId())
                 .addConfigProperty("merge-strategy", "Defragment")
             .autoTerminateAt("failure")
             .autoTerminateAt("original")

@@ -2,11 +2,10 @@ package com.exist.nifirestapi.service;
 
 import java.util.List;
 
-import com.exist.nifirestapi.builder.ConnectionBuilder;
+import com.exist.nifirestapi.builder.ConnectionBuilder2;
 import com.exist.nifirestapi.client.NifiClient;
 
 import org.apache.nifi.web.api.dto.ComponentDTO;
-import org.apache.nifi.web.api.entity.ComponentEntity;
 import org.apache.nifi.web.api.entity.ConnectionEntity;
 import org.apache.nifi.web.api.entity.ControllerServiceEntity;
 import org.apache.nifi.web.api.entity.Permissible;
@@ -27,10 +26,10 @@ public class NifiService {
         return this.nifiClient.addProcessor(processor, processGroupId);
     }
 
-    public <T extends ComponentEntity & Permissible<? extends ComponentDTO>> ConnectionEntity connectComponents(
+    public <T extends Permissible<? extends ComponentDTO>> ConnectionEntity connectComponents(
         T source, T destination, List<String> connectionRelationships, String processGroupId) {
 
-        ConnectionBuilder connectionBuilder = new ConnectionBuilder()
+        ConnectionBuilder2 connectionBuilder = new ConnectionBuilder2()
             .source(source)
             .destination(destination);
 
@@ -66,15 +65,5 @@ public class NifiService {
     public ProcessorsEntity getProcessors(String processGroupId) {
         return this.nifiClient.getProcessors(processGroupId);
     }
-
-    public void startProcessGroup(ProcessGroupEntity processGroup) {
-        ProcessorsEntity processors = this.nifiClient.getProcessors(processGroup.getId());
-
-        processors.getProcessors()
-            .forEach(processor -> {
-                System.out.println(processor.getId());
-                processor.getComponent().setName("Test");
-                this.nifiClient.updateProcessor(processor);
-            });
-    }
+    
 }
