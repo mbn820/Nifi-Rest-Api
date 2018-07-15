@@ -3,7 +3,6 @@ package com.exist.nifirestapi.nifisetup;
 import java.util.Arrays;
 import java.util.Map;
 
-import com.exist.nifirestapi.builder.ControllerServiceBuilder;
 import com.exist.nifirestapi.builder.PortBuilder;
 import com.exist.nifirestapi.builder.ProcessorBuilder;
 import com.exist.nifirestapi.service.NifiService;

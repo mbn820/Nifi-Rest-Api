@@ -32,6 +32,10 @@ public class PositionUtil {
 		return template(componentEntity, 500.00, 0.00);
 	}
 
+	public static PositionDTO startingPosition() {
+		return new PositionDTO(1000.00, 1000.00);
+	}
+
 
 
 }

@@ -12,15 +12,9 @@ import com.exist.nifirestapi.util.PositionUtil;
 import org.apache.nifi.web.api.dto.PositionDTO;
 import org.apache.nifi.web.api.entity.ControllerServiceEntity;
 import org.apache.nifi.web.api.entity.ProcessGroupEntity;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.CommandLineRunner;
-import org.springframework.context.annotation.Bean;
-import org.springframework.stereotype.Component;
 
-@Component
 public class NifiSetup {
 
-    @Autowired
 	private NifiService nifiService;
 
 	private ProcessGroupEntity parentProcessGroup;
@@ -31,51 +25,49 @@ public class NifiSetup {
 
 	private Map<String, ControllerServiceEntity> controllerServices = new HashMap<>();
 
+	public NifiSetup(NifiService nifiService) {
+		this.nifiService = nifiService;
+	}
 
-    @Bean
-    public CommandLineRunner run() {
-        return args -> {
+    public void start() {
+		createProcessGroups();
+		createControllerServices();
+		// enableControllerServices();
 
-			createProcessGroups();
-			createControllerServices();
-			enableControllerServices();
+		LocationKeysProcessGroupSetup locationKeyProcessGroupSetup =
+			new LocationKeysProcessGroupSetup(nifiService, locationKeysProcessGroup, controllerServices);
 
-			LocationKeysProcessGroupSetup locationKeyProcessGroupSetup =
-				new LocationKeysProcessGroupSetup(nifiService, locationKeysProcessGroup, controllerServices);
+		HistoricalDataProcessGroupSetup historicalDataProcessGroupSetup =
+			new HistoricalDataProcessGroupSetup(nifiService, historicalDataProcessGroup, controllerServices);
 
-			HistoricalDataProcessGroupSetup historicalDataProcessGroupSetup =
-				new HistoricalDataProcessGroupSetup(nifiService, historicalDataProcessGroup, controllerServices);
+		ForecastDataProcessGroupSetup forecastDailyProcessGroupSetup =
+			new ForecastDataProcessGroupSetup(nifiService, forecastDailyDataProcessGroup, controllerServices);
 
-			ForecastDataProcessGroupSetup forecastDailyProcessGroupSetup =
-				new ForecastDataProcessGroupSetup(nifiService, forecastDailyDataProcessGroup, controllerServices);
+		ForecastHourlyProcessGroupSetup forecastHourlyProcessGroupSetup =
+			new ForecastHourlyProcessGroupSetup(nifiService, forecastHourlyDataProcessGroup, controllerServices);
 
-			ForecastHourlyProcessGroupSetup forecastHourlyProcessGroupSetup =
-			    new ForecastHourlyProcessGroupSetup(nifiService, forecastHourlyDataProcessGroup, controllerServices);
+		locationKeyProcessGroupSetup.setup();
+		historicalDataProcessGroupSetup.setup();
+		forecastDailyProcessGroupSetup.setup();
+		forecastHourlyProcessGroupSetup.setup();
 
-			locationKeyProcessGroupSetup.setup();
-			historicalDataProcessGroupSetup.setup();
-			forecastDailyProcessGroupSetup.setup();
-			forecastHourlyProcessGroupSetup.setup();
+		nifiService.connectComponents(
+			locationKeyProcessGroupSetup.getOutputPort(),
+			historicalDataProcessGroupSetup.getInputPort(),
+			Arrays.asList(),
+			parentProcessGroup.getId());
 
-			nifiService.connectComponents(
-				locationKeyProcessGroupSetup.getOutputPort(),
-				historicalDataProcessGroupSetup.getInputPort(),
-				Arrays.asList(),
-				parentProcessGroup.getId());
+		nifiService.connectComponents(
+			locationKeyProcessGroupSetup.getOutputPort(),
+			forecastDailyProcessGroupSetup.getInputPort(),
+			Arrays.asList(),
+			parentProcessGroup.getId());
 
-			nifiService.connectComponents(
-				locationKeyProcessGroupSetup.getOutputPort(),
-				forecastDailyProcessGroupSetup.getInputPort(),
-				Arrays.asList(),
-				parentProcessGroup.getId());
-
-			nifiService.connectComponents(
-				locationKeyProcessGroupSetup.getOutputPort(),
-				forecastHourlyProcessGroupSetup.getInputPort(),
-				Arrays.asList(),
-				parentProcessGroup.getId());
-
-        };
+		nifiService.connectComponents(
+			locationKeyProcessGroupSetup.getOutputPort(),
+			forecastHourlyProcessGroupSetup.getInputPort(),
+			Arrays.asList(),
+			parentProcessGroup.getId());
 	}
 
 	public void createProcessGroups() {
