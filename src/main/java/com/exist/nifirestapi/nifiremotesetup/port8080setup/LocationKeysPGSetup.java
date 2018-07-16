@@ -1,4 +1,4 @@
-package com.exist.nifirestapi.nifiremotesetup;
+package com.exist.nifirestapi.nifiremotesetup.port8080setup;
 
 import java.util.Arrays;
 import java.util.Map;
@@ -160,7 +160,7 @@ public class LocationKeysPGSetup {
     public PortEntity createLocationKeysOutputPort() {
         return new PortBuilder()
             .name("LOCATION KEYS OUTPUT PORT")
-            .type("OUTPUT PORT")
+            .type("OUTPUT_PORT")
             .position(PositionUtil.belowOf(extractLocationKey))
             .build();
     }

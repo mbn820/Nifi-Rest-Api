@@ -2,6 +2,7 @@ package com.exist.nifirestapi.client;
 
 import org.apache.nifi.web.api.entity.ConnectionEntity;
 import org.apache.nifi.web.api.entity.ControllerServiceEntity;
+import org.apache.nifi.web.api.entity.FunnelEntity;
 import org.apache.nifi.web.api.entity.PortEntity;
 import org.apache.nifi.web.api.entity.ProcessGroupEntity;
 import org.apache.nifi.web.api.entity.ProcessorEntity;
@@ -26,6 +27,7 @@ public class NifiClient {
     private String OUTPUT_PORT_URL;
     private String UPDATE_CONTROLLER;
     private String GET_REMOTE;
+    private String FUNNEL_URL;
 
     private String TEST_URL = "http://localhost:7777/contentListener";
 
@@ -46,6 +48,7 @@ public class NifiClient {
         REMOTE_PROCESS_GROUP_URL = constructUrl("/process-groups/{process-group}/remote-process-groups");
         INPUT_PORT_URL           = constructUrl("/process-groups/{process-group}/input-ports");
         OUTPUT_PORT_URL          = constructUrl("/process-groups/{process-group}/output-ports");
+        FUNNEL_URL               = constructUrl("/process-groups/{process-group}/funnels");
         UPDATE_CONTROLLER        = constructUrl("/controller-services/{controller-id}");
         GET_REMOTE               = constructUrl("/remote-process-groups/{id}");
     }
@@ -103,6 +106,10 @@ public class NifiClient {
 
     public PortEntity addOutputPort(PortEntity outputPort, String processGroupId) {
         return this.restTemplate.postForObject(OUTPUT_PORT_URL, outputPort, PortEntity.class, processGroupId);
+    }
+
+    public FunnelEntity addFunnel(FunnelEntity funnel, String processGroupId) {
+        return this.restTemplate.postForObject(FUNNEL_URL, funnel, FunnelEntity.class, processGroupId);
     }
 
     public ProcessorsEntity getProcessors(String processGroupId) {

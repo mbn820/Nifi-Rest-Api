@@ -1,4 +1,4 @@
-package com.exist.nifirestapi.nifiremotesetup;
+package com.exist.nifirestapi.nifiremotesetup.port8080setup;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -20,9 +20,11 @@ public class HistoricalDataPGSetup {
     private NifiService nifiService;
     private ProcessGroupEntity locationKeysProcessGroup;
     private PortEntity locationKeysInputPort;
+    private PortEntity historicalDataOutputPort;
     private ProcessorEntity getHistoricalData;
     private ProcessorEntity splitHistoricalData;
     private ProcessorEntity extractFields;
+    private ProcessorEntity addAttributes;
 
 
     public HistoricalDataPGSetup() {}
@@ -48,6 +50,9 @@ public class HistoricalDataPGSetup {
         getHistoricalData   = nifiService.addProcessor(createGetHistoricalData(), processGroupId);
         splitHistoricalData = nifiService.addProcessor(createSplitHistoricalData(), processGroupId);
         extractFields       = nifiService.addProcessor(createExtractFields(), processGroupId);
+        addAttributes       = nifiService.addProcessor(createAddAttributes(), processGroupId);
+
+        historicalDataOutputPort = nifiService.addOutputPort(createHistoricalDataOutputPort(), processGroupId);
     }
 
     public void connectProcessors() {
@@ -55,11 +60,17 @@ public class HistoricalDataPGSetup {
 
         nifiService.connectComponents(locationKeysInputPort, getHistoricalData, new ArrayList<String>(), processGroupId);
 		nifiService.connectComponents(getHistoricalData, splitHistoricalData, Arrays.asList("Response"), processGroupId);
-		nifiService.connectComponents(splitHistoricalData, extractFields, Arrays.asList("split"), processGroupId);
+        nifiService.connectComponents(splitHistoricalData, extractFields, Arrays.asList("split"), processGroupId);
+        nifiService.connectComponents(extractFields, addAttributes, Arrays.asList("matched"), processGroupId);
+        nifiService.connectComponents(addAttributes, historicalDataOutputPort, Arrays.asList("success"), processGroupId);
     }
 
     public PortEntity getInputPort() {
         return locationKeysInputPort;
+    }
+
+    public PortEntity getOutputPort() {
+        return historicalDataOutputPort;
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -109,6 +120,24 @@ public class HistoricalDataPGSetup {
                 .addConfigProperty("temp", "$.Temperature.Metric.Value")
             .autoTerminateAt("failure")
             .autoTerminateAt("unmatched")
+            .build();
+    }
+
+    public ProcessorEntity createAddAttributes() {
+        return new ProcessorBuilder()
+            .name("Add Attributes")
+            .type("org.apache.nifi.processors.attributes.UpdateAttribute")
+            .position(PositionUtil.belowOf(extractFields))
+                .addConfigProperty("weatherDataType", "historical")
+                .addConfigProperty("data_type", "hourly")
+            .build();
+    }
+
+    public PortEntity createHistoricalDataOutputPort() {
+        return new PortBuilder()
+            .name("OUTGOING HISTORICAL DATA")
+            .type("OUTPUT_PORT")
+            .position(PositionUtil.belowOf(addAttributes))
             .build();
     }
 

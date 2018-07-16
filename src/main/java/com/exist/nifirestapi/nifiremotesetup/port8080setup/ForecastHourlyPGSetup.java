@@ -1,4 +1,4 @@
-package com.exist.nifirestapi.nifiremotesetup;
+package com.exist.nifirestapi.nifiremotesetup.port8080setup;
 
 import java.util.Arrays;
 import java.util.Map;
@@ -18,10 +18,12 @@ public class ForecastHourlyPGSetup {
 
     private NifiService nifiService;
     private PortEntity locationKeysInputPort;
+    private PortEntity forecastHourlyDataOutputPort;
     private ProcessGroupEntity locationKeysProcessGroup;
     private ProcessorEntity getForecastHourlyData;
     private ProcessorEntity splitForecastHourlyData;
     private ProcessorEntity extractFields;
+    private ProcessorEntity addAttributes;
 
 
     public ForecastHourlyPGSetup() {}
@@ -47,6 +49,9 @@ public class ForecastHourlyPGSetup {
         getForecastHourlyData   = nifiService.addProcessor(createGetForecastHourlyData(), processGroupId);
         splitForecastHourlyData = nifiService.addProcessor(createSplitForecastHourlyData(), processGroupId);
         extractFields           = nifiService.addProcessor(createExtractFields(), processGroupId);
+        addAttributes           = nifiService.addProcessor(createAddAttributes(), processGroupId);
+
+        forecastHourlyDataOutputPort = nifiService.addOutputPort(createForecastHourlyDataOutputPort(), processGroupId);
     }
 
     public void connectProcessors() {
@@ -54,11 +59,18 @@ public class ForecastHourlyPGSetup {
 
         nifiService.connectComponents(locationKeysInputPort, getForecastHourlyData, Arrays.asList(), processGroupId);
 		nifiService.connectComponents(getForecastHourlyData, splitForecastHourlyData, Arrays.asList("Response"), processGroupId);
-		nifiService.connectComponents(splitForecastHourlyData, extractFields, Arrays.asList("split"), processGroupId);
+        nifiService.connectComponents(splitForecastHourlyData, extractFields, Arrays.asList("split"), processGroupId);
+        nifiService.connectComponents(extractFields, addAttributes, Arrays.asList("matched"), processGroupId);
+        nifiService.connectComponents(addAttributes, forecastHourlyDataOutputPort, Arrays.asList("success"), processGroupId);
+
     }
 
     public PortEntity getInputPort() {
         return locationKeysInputPort;
+    }
+
+    public PortEntity getOutputPort() {
+        return forecastHourlyDataOutputPort;
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -108,6 +120,24 @@ public class ForecastHourlyPGSetup {
                 .addConfigProperty("temp", "$.Temperature.Value")
             .autoTerminateAt("failure")
             .autoTerminateAt("unmatched")
+            .build();
+    }
+
+    public ProcessorEntity createAddAttributes() {
+        return new ProcessorBuilder()
+            .name("Add Attributes")
+            .type("org.apache.nifi.processors.attributes.UpdateAttribute")
+            .position(PositionUtil.belowOf(extractFields))
+                .addConfigProperty("weatherDataType", "forecast_hourly")
+                .addConfigProperty("data_type", "hourly")
+            .build();
+    }
+
+    public PortEntity createForecastHourlyDataOutputPort() {
+        return new PortBuilder()
+            .name("OUTGOING FORECAST HOURLY DATA")
+            .type("OUTPUT_PORT")
+            .position(PositionUtil.belowOf(addAttributes))
             .build();
     }
 

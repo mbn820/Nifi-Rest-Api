@@ -1,4 +1,4 @@
-package com.exist.nifirestapi.nifiremotesetup;
+package com.exist.nifirestapi.nifiremotesetup.port8080setup;
 
 import java.util.Arrays;
 import java.util.Map;
@@ -23,6 +23,7 @@ public class ForecastDailyDataPGSetup {
     private ProcessorEntity getForecastDailyData;
     private ProcessorEntity splitForecastDailyData;
     private ProcessorEntity extractFields;
+    private ProcessorEntity addAttributes;
 
     public ForecastDailyDataPGSetup() {}
 
@@ -47,6 +48,7 @@ public class ForecastDailyDataPGSetup {
         getForecastDailyData   = nifiService.addProcessor(createGetForecastDailyData(), processGroupId);
         splitForecastDailyData = nifiService.addProcessor(createSplitForecastDailyData(), processGroupId);
         extractFields          = nifiService.addProcessor(createExtractFields(), processGroupId);
+        addAttributes          = nifiService.addProcessor(createAddAttributes(), processGroupId);
 
         forecastDailyDataOutputPort = nifiService.addOutputPort(createForecastDailyDataOutputPort(), processGroupId);
     }
@@ -57,7 +59,8 @@ public class ForecastDailyDataPGSetup {
         nifiService.connectComponents(locationKeysInputPort, getForecastDailyData, Arrays.asList(), processGroupId);
 		nifiService.connectComponents(getForecastDailyData, splitForecastDailyData, Arrays.asList("Response"), processGroupId);
         nifiService.connectComponents(splitForecastDailyData, extractFields, Arrays.asList("split"), processGroupId);
-        nifiService.connectComponents(extractFields, forecastDailyDataOutputPort, Arrays.asList("matched"), processGroupId);
+        nifiService.connectComponents(extractFields, addAttributes, Arrays.asList("matched"), processGroupId);
+        nifiService.connectComponents(addAttributes, forecastDailyDataOutputPort, Arrays.asList("success"), processGroupId);
     }
 
     public PortEntity getInputPort() {
@@ -119,11 +122,21 @@ public class ForecastDailyDataPGSetup {
             .build();
     }
 
+    public ProcessorEntity createAddAttributes() {
+        return new ProcessorBuilder()
+            .name("Add Attributes")
+            .type("org.apache.nifi.processors.attributes.UpdateAttribute")
+            .position(PositionUtil.belowOf(extractFields))
+                .addConfigProperty("weatherDataType", "forecast_daily")
+                .addConfigProperty("data_type", "daily")
+            .build();
+    }
+
     public PortEntity createForecastDailyDataOutputPort() {
         return new PortBuilder()
             .name("OUTGOING FORECAST DAILY DATA")
             .type("OUTPUT_PORT")
-            .position(PositionUtil.belowOf(extractFields))
+            .position(PositionUtil.belowOf(addAttributes))
             .build();
     }
 

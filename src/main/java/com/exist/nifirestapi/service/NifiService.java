@@ -9,6 +9,7 @@ import org.apache.nifi.web.api.dto.ComponentDTO;
 import org.apache.nifi.web.api.dto.RemoteProcessGroupPortDTO;
 import org.apache.nifi.web.api.entity.ConnectionEntity;
 import org.apache.nifi.web.api.entity.ControllerServiceEntity;
+import org.apache.nifi.web.api.entity.FunnelEntity;
 import org.apache.nifi.web.api.entity.Permissible;
 import org.apache.nifi.web.api.entity.PortEntity;
 import org.apache.nifi.web.api.entity.ProcessGroupEntity;
@@ -50,15 +51,19 @@ public class NifiService {
         List<String> connectionRelationships, 
         String processGroupId) {
 
-        RemoteProcessGroupPortDTO remoteInputPort = 
-            nifiClient.getRemoteProcessGroup(destination.getId())
-                      .getComponent()
-                      .getContents()
-                      .getInputPorts()
-                      .stream()
-                      .filter(port -> port.getName().equals(portName))
-                      .findFirst()
-                      .get();
+        RemoteProcessGroupPortDTO remoteInputPort = null;
+
+        while (remoteInputPort == null) {
+            remoteInputPort = nifiClient.getRemoteProcessGroup(destination.getId())
+                                        .getComponent()
+                                        .getContents()
+                                        .getInputPorts()
+                                        .stream()
+                                        .filter(port -> port.getName().equals(portName))
+                                        .findFirst()
+                                        .orElse(null);
+        }
+            
 
         ConnectionEntity remoteConnection = new ConnectionBuilder()
             .source(source)
@@ -73,6 +78,13 @@ public class NifiService {
 
     public ControllerServiceEntity addControllerService(ControllerServiceEntity controllerService, String processGroupId) {
         return this.nifiClient.addControllerService(controllerService, processGroupId);
+    }
+
+    public void enableControllerService(ControllerServiceEntity controllerService) {
+        controllerService.getComponent().setState("ENABLED");
+        controllerService.getComponent().setProperties(null);
+
+        this.nifiClient.updateControllerService(controllerService);
     }
 
     public void updateControllerService(ControllerServiceEntity controllerService) {
@@ -105,6 +117,10 @@ public class NifiService {
 
     public RemoteProcessGroupEntity getRemoteProcessGroup(String remoteProcessGroupId) {
         return this.nifiClient.getRemoteProcessGroup(remoteProcessGroupId);
+    }
+
+    public FunnelEntity addFunnel(FunnelEntity funnel, String processGroupId) {
+        return this.nifiClient.addFunnel(funnel, processGroupId);
     }
 
     public void enableRemoteProcessGroupTransmission(RemoteProcessGroupEntity remoteProcessGroup) {
