@@ -21,7 +21,7 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 		<java.version>1.8</java.version>
-		<nifi.version>1.7.0</nifi.version>
+		<nifi.version>1.7.1</nifi.version>
 	</properties>
 
 	<dependencies>
@@ -56,6 +56,13 @@
 			<artifactId>nifi-client-dto</artifactId>
 			<version>${nifi.version}</version>
 		</dependency>
+
+		<dependency>
+			<groupId>com.alibaba</groupId>
+			<artifactId>fastjson</artifactId>
+			<version>1.2.47</version>
+		</dependency>
+
 	</dependencies>
 
 	<build>
